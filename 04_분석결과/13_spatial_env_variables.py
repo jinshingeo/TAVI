@@ -1,13 +1,14 @@
 """
 Plan A: 역별 공간환경 변수 추출
 ================================
-각 역의 Classic Catchment Zone 내 녹지 면적 비율 + 수계 거리 산출
+각 역의 Classic Catchment Zone 내 녹지 면적 비율 + 수계 거리 + 건물 높이 산출
 
 변수 목록:
-  1. green_ratio      - 전체 녹지(도시숲+마을숲+가로수+학교숲+경관숲) 면적 비율
+  1. green_ratio       - 전체 녹지(도시숲+마을숲+가로수+학교숲+경관숲) 면적 비율
   2. street_tree_ratio - 가로수 면적 비율
   3. urban_forest_ratio - 도시숲+마을숲+경관숲 면적 비율
-  4. river_dist_m     - 역 노드에서 가장 가까운 수계(한강/하천)까지 거리 (m)
+  4. river_dist_m      - 역 노드에서 가장 가까운 수계(한강/하천)까지 거리 (m)
+  5. mean_bld_height_m - catchment zone 내 평균 건물 높이 (층수×3m 추정)
 
 catchment zone 정의: Classic catchment 노드들의 convex hull
 """
@@ -34,6 +35,7 @@ STP_BASE    = '/Users/jin/석사논문/성동구_STP연구'
 NET_PATH    = os.path.join(STP_BASE, '01_네트워크/seongdong_walk_network.graphml')
 UTCI_PATH   = os.path.join(STP_BASE, '04_분석결과/link_utci_by_hour_v3.csv')
 GREEN_PATH  = '/Users/jin/Green_Space_2SFCA/코드/data/도시숲전체_면_서울_최종_중분류.shp'
+BULD_PATH   = '/Users/jin/석사논문/TAVI/03_건물데이터/(도로명주소)건물_서울/TL_SPBD_BULD_11_202603.shp'
 FIG_DIR     = os.path.join(BASE, 'figures')
 OUT_DIR     = BASE
 os.makedirs(FIG_DIR, exist_ok=True)
@@ -113,6 +115,15 @@ green = green_raw.cx[xmin:xmax, ymin:ymax].copy()
 green['area_m2'] = green.geometry.area
 print(f"  성동구 내 녹지: {len(green)}개 ({green['U2_NAM'].value_counts().to_dict()})")
 
+print("건물 데이터 로드 중 (성동구 필터)...")
+buld_raw = gpd.read_file(BULD_PATH)   # EPSG:5179
+seongdong_buld = buld_raw[buld_raw['SIG_CD'] == '11200'].copy()
+seongdong_buld['height_m'] = seongdong_buld['GRO_FLO_CO'].clip(lower=1) * 3
+seongdong_buld = seongdong_buld.to_crs('EPSG:5186')
+seongdong_buld['geometry'] = seongdong_buld.geometry.buffer(0)  # invalid geometry 수정
+seongdong_buld = seongdong_buld[seongdong_buld.geometry.is_valid].copy()
+print(f"  성동구 건물: {len(seongdong_buld):,}개 | 평균 높이 {seongdong_buld['height_m'].mean():.1f}m")
+
 print("수계 데이터 로드 중 (OSM)...")
 waterways = ox.features_from_place(
     "Seongdong-gu, Seoul, South Korea",
@@ -160,13 +171,17 @@ for station_name, sinfo in STATIONS.items():
     street_tree_ratio  = street_tree   / catchment_area_m2 * 100
     urban_forest_ratio = urban_forest  / catchment_area_m2 * 100
 
-    # 3. 역 노드 → 수계 최단거리
+    # 3. 건물 평균 높이 (catchment zone 내)
+    buld_clip = gpd.clip(seongdong_buld[['height_m', 'geometry']], poly_gdf)
+    mean_bld_height = buld_clip['height_m'].mean() if len(buld_clip) > 0 else np.nan
+
+    # 4. 역 노드 → 수계 최단거리
     station_pt_utm = gpd.GeoDataFrame(
         geometry=[Point(sinfo['lon'], sinfo['lat'])], crs='EPSG:4326'
     ).to_crs('EPSG:5186').geometry[0]
     river_dist_m = station_pt_utm.distance(water_union)
 
-    # 4. catchment zone 내 평균 UTCI (13시)
+    # 5. catchment zone 내 평균 UTCI (13시)
     utci_vals = [
         utci_lookup.get((str(u), str(v), 13),
         utci_lookup.get((str(v), str(u), 13), np.nan))
@@ -186,11 +201,12 @@ for station_name, sinfo in STATIONS.items():
         'urban_forest_ratio_pct': round(urban_forest_ratio, 2),
         'river_dist_m':        round(river_dist_m),
         'mean_utci_13h':       round(mean_utci, 1),
+        'mean_bld_height_m':   round(mean_bld_height, 1),
     })
 
     print(f"  [{station_name}] catchment {catchment_area_m2/1e6:.2f}km² | "
-          f"녹지 {green_ratio:.1f}% (가로수 {street_tree_ratio:.1f}%) | "
-          f"수계거리 {river_dist_m:.0f}m | UTCI {mean_utci:.1f}°C")
+          f"녹지 {green_ratio:.1f}% | 수계거리 {river_dist_m:.0f}m | "
+          f"건물높이 {mean_bld_height:.1f}m | UTCI {mean_utci:.1f}°C")
 
 # ── 저장 ───────────────────────────────────────────────────────────────
 df = pd.DataFrame(rows)
@@ -209,14 +225,15 @@ out_csv = os.path.join(OUT_DIR, 'spatial_env_variables.csv')
 df.to_csv(out_csv, index=False, encoding='utf-8-sig')
 print(f"\n저장 완료: {out_csv}")
 print(df[['station', 'green_ratio_pct', 'street_tree_ratio_pct',
-           'river_dist_m', 'mean_utci_13h', 'reduction_pct_h13']].to_string(index=False))
+           'river_dist_m', 'mean_bld_height_m', 'mean_utci_13h',
+           'reduction_pct_h13']].to_string(index=False))
 
 # ── 시각화: 변수 간 산점도 ─────────────────────────────────────────────
 print("\n산점도 생성 중...")
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig, axes = plt.subplots(1, 4, figsize=(20, 5))
 
-vars_x = ['green_ratio_pct', 'river_dist_m', 'mean_utci_13h']
-labels_x = ['녹지 비율 (%)', '수계까지 거리 (m)', '평균 UTCI 13시 (°C)']
+vars_x = ['green_ratio_pct', 'river_dist_m', 'mean_bld_height_m', 'mean_utci_13h']
+labels_x = ['녹지 비율 (%)', '수계까지 거리 (m)', '평균 건물 높이 (m)', '평균 UTCI 13시 (°C)']
 colors = ['#43A047', '#1E88E5', '#E53935', '#FB8C00', '#8E24AA', '#00ACC1', '#6D4C41']
 
 for ax, xvar, xlabel in zip(axes, vars_x, labels_x):
