@@ -42,7 +42,7 @@ os.makedirs(FIG_DIR, exist_ok=True)
 
 # ── 파라미터 ───────────────────────────────────────────────────────────
 WALK_SPEED  = 4.5 * 1000 / 3600
-TIME_BUDGET = 30 * 60
+TIME_BUDGET = 15 * 60
 ALPHA       = 0.15
 
 STATIONS = {
@@ -80,20 +80,30 @@ def compute_classic_catchment(G, station_node, utci_lookup, hour=13, alpha=ALPHA
     )
 
 
-def nodes_to_polygon_utm(G, node_ids, crs_utm='EPSG:5186'):
-    """노드 집합 → convex hull polygon (UTM-K m 단위)"""
-    pts = [(G.nodes[n]['x'], G.nodes[n]['y']) for n in node_ids if n in G.nodes]
-    if len(pts) < 3:
-        return None
-    gdf = gpd.GeoDataFrame(geometry=[Point(p) for p in pts], crs='EPSG:4326')
-    gdf_utm = gdf.to_crs(crs_utm)
-    return gdf_utm.unary_union.convex_hull
+def catchment_links_to_zone(G, classic_nodes, edges_utm, buffer_m=30):
+    """
+    Classic catchment 링크 → 링크 버퍼 기반 zone 생성
+    (convex hull 대신 실제 도달 가능한 링크 집합으로 정의)
+    - 양 끝 노드가 모두 classic_nodes에 포함된 링크만 선택
+    - 각 링크를 buffer_m로 버퍼링 → 유니온
+    """
+    mask = (
+        edges_utm.index.get_level_values(0).isin(classic_nodes) &
+        edges_utm.index.get_level_values(1).isin(classic_nodes)
+    )
+    links_in = edges_utm[mask]
+    if len(links_in) == 0:
+        return None, 0
+    zone = links_in.geometry.buffer(buffer_m).union_all()
+    return zone, zone.area
 
 
 # ── 데이터 로드 ────────────────────────────────────────────────────────
 print("네트워크 로드 중...")
 G_base = ox.load_graphml(NET_PATH)
 G_base = G_base.to_undirected()
+_, edges_gdf = ox.graph_to_gdfs(G_base)
+edges_utm = edges_gdf.to_crs('EPSG:5186')
 
 print("UTCI 데이터 로드 중...")
 link_df = pd.read_csv(UTCI_PATH, encoding='utf-8-sig')
@@ -148,14 +158,12 @@ for station_name, sinfo in STATIONS.items():
     classic_dist = compute_classic_catchment(G, sinfo['node'], utci_lookup)
     classic_nodes = set(classic_dist.keys())
 
-    # 1. Catchment polygon (UTM-K)
-    poly = nodes_to_polygon_utm(G, classic_nodes)
-    if poly is None:
-        print(f"  [{station_name}] catchment polygon 생성 실패 — 스킵")
+    # 1. Catchment zone = classic catchment 링크 버퍼 유니온 (링크 단위 평가)
+    zone, catchment_area_m2 = catchment_links_to_zone(G, classic_nodes, edges_utm, buffer_m=30)
+    if zone is None:
+        print(f"  [{station_name}] catchment zone 생성 실패 — 스킵")
         continue
-
-    catchment_area_m2 = poly.area
-    poly_gdf = gpd.GeoDataFrame(geometry=[poly], crs='EPSG:5186')
+    poly_gdf = gpd.GeoDataFrame(geometry=[zone], crs='EPSG:5186')
 
     # 2. 녹지 면적 교차
     green_clip = gpd.clip(green, poly_gdf)

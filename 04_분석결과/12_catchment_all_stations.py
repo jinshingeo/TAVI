@@ -31,7 +31,7 @@ os.makedirs(FIG_DIR, exist_ok=True)
 
 # ── 파라미터 ───────────────────────────────────────────────────────────
 WALK_SPEED  = 4.5 * 1000 / 3600   # m/s
-TIME_BUDGET = 30 * 60             # 초 (30분)
+TIME_BUDGET = 15 * 60             # 초 (15분)
 ALPHA       = 0.15
 
 TARGET_HOURS = [7, 10, 13, 16]
@@ -149,7 +149,7 @@ for i, s in enumerate(station_names):
 
 ax.set_title(
     f'성동구 전체 지하철역 — 시간대별 도보 접근성 감소율\n'
-    f'(Classic vs Thermal Catchment, α={ALPHA}, 30분 시간예산)',
+    f'(Classic vs Thermal Catchment, α={ALPHA}, 15분 시간예산)',
     fontsize=12, fontweight='bold'
 )
 plt.tight_layout()
@@ -238,7 +238,7 @@ fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=11,
 
 fig.suptitle(
     '성동구 전체 지하철역 — 폭염(13시) 도보 Catchment 비교\n'
-    f'UTCI 기반 열 패널티 (α={ALPHA}) | 시간예산 30분',
+    f'UTCI 기반 열 패널티 (α={ALPHA}) | 시간예산 15분',
     fontsize=15, fontweight='bold'
 )
 plt.tight_layout(rect=[0, 0.06, 1, 1])
