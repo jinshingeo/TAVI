@@ -220,8 +220,8 @@ for ax, (station_name, sinfo) in zip(axes_flat, STATIONS.items()):
     e[e['etype'] == 'thermal'].plot(ax=ax, color='#2E7D32', linewidth=1.2, alpha=0.9, zorder=3)
 
     sg = nodes_wm.loc[sinfo['node']].geometry
-    ax.plot(sg.x, sg.y, '*', color='#FFD600', markersize=16, zorder=8,
-            markeredgecolor='black', markeredgewidth=0.6)
+    ax.plot(sg.x, sg.y, 'o', color='#FFD600', markersize=10, zorder=8,
+            markeredgecolor='black', markeredgewidth=1.5)
     try:
         ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, zoom=14, alpha=0.45)
     except Exception:
