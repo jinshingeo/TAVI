@@ -1,6 +1,6 @@
 # 참고문헌 목록 (TAVI 연구)
 
-> 마지막 업데이트: 2026-04-10
+> 마지막 업데이트: 2026-04-10 (SOLWEIG/합성DSM 추가)
 
 ---
 
@@ -55,7 +55,37 @@
 
 ---
 
-## 4. SVF (Sky View Factor) 및 열환경 보정
+## 4. SOLWEIG 및 합성 DSM
+
+### Lindberg et al. (2008) — SOLWEIG 원전 ★ 핵심
+- **인용**: Lindberg, F., Holmer, B., & Thorsson, S. (2008). SOLWEIG 1.0 – Modelling spatial variations of 3D radiant fluxes and mean radiant temperatures in complex urban settings. *International Journal of Biometeorology*, 52(7), 697–713.
+- **핵심 내용**: SOLWEIG(Solar and Long-Wave Environmental Irradiance Geometry) 모델 원전. DSM 입력으로 픽셀 단위 MRT 및 UTCI 계산. 건물 폴리곤 기반 합성 DSM을 공식 입력으로 지원.
+- **사용 근거 신뢰도**: A (1차 문헌, 도시기후 분야 표준 도구)
+- **사용 위치**: 합성 DSM 기반 UTCI 계산 방법론 근거
+
+### Lindberg et al. (2018) — UMEP (SOLWEIG 구현 플랫폼) ★ 핵심
+- **인용**: Lindberg, F., Grimmond, C. S. B., Gabey, A., Huang, B., Kent, C. W., Sun, T., ... & Zhang, Z. (2018). Urban Multi-scale Environmental Predictor (UMEP): An integrated tool for city-based climate services. *Environmental Modelling & Software*, 99, 70–87.
+- **핵심 내용**: UMEP 플랫폼 내 "DSM from polygon" 도구 명시. LiDAR 미확보 시 건물 폴리곤 + 높이 속성으로 합성 DSM 생성하는 공식 워크플로우 제공.
+- **사용 근거 신뢰도**: A (1차 문헌, QGIS 오픈소스 플랫폼)
+- **사용 위치**: 건물 폴리곤 → 합성 DSM 생성 방법론 근거
+- **핵심 인용 문구**: "Building footprint polygons with height attributes can be used to generate a building DSM as an alternative when airborne LiDAR data is unavailable."
+
+### Colaninno et al. (2024) — 선행연구 ★ 방법론 비교
+- **인용**: Colaninno, N., Basu, R., Hosseini, M., Alhassan, A., Liu, L., & Sevtsuk, A. (2024). A sidewalk-level urban heat risk assessment framework using pedestrian mobility and urban microclimate modeling. *EPB: Urban Analytics and City Science*, 52(5), 1071–1090.
+- **핵심 내용**: SOLWEIG + LiDAR DSM으로 1m 해상도 UTCI 계산 → 보도 세그먼트 집계 → 보행 열위험 평가. IPCC H×E×V 프레임워크 적용. 본 연구와 가장 유사한 방법론.
+- **사용 근거 신뢰도**: A (1차 문헌, Urban Analytics and City Science)
+- **사용 위치**: UTCI 계산 방법론 및 H×E×V 프레임워크 비교 근거
+- **본 연구와의 차이**: Colaninno et al.은 LiDAR DSM 사용. 본 연구는 LiDAR 미확보로 건물 폴리곤 기반 합성 DSM 사용 (Lindberg et al. 2018의 공식 대안 방법).
+
+### Hersbach et al. (2020) — ERA5 기상데이터
+- **인용**: Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. *Quarterly Journal of the Royal Meteorological Society*, 146(730), 1999–2049.
+- **핵심 내용**: ECMWF Copernicus Climate Change Service(C3S)의 ERA5 재분석 기상데이터. 시간별 기온·습도·풍속·일사량 제공. SOLWEIG 기상 입력으로 사용.
+- **사용 근거 신뢰도**: A (1차 문헌)
+- **사용 위치**: SOLWEIG 기상 입력 데이터 (ASOS 대체)
+
+---
+
+## 5. SVF (Sky View Factor) 및 열환경 보정
 
 ### Oke (1987) — H/W street canyon 공식 ★ 핵심
 - **인용**: Oke, T. R. (1987). *Boundary Layer Climates* (2nd ed.). Routledge.
@@ -105,7 +135,7 @@
 
 ---
 
-## 7. 추가 확인 필요
+## 8. 추가 확인 필요
 
 | 내용 | 현재 상태 | 할 일 |
 |---|---|---|

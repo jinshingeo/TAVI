@@ -18,6 +18,10 @@
 | `16_utci_link_corrected.py` | Chen & Ng (2012) | CANOPY_COEFF = 2.5°C |
 | `16_utci_link_corrected.py` | Bröde et al. (2012) | 임계값 38°C (very strong heat stress) |
 | `17_catchment_corrected.py` | Oke (1987), Bröde et al. (2012) | 링크 회피 모델 |
+| `18_synthetic_dsm.py` (예정) | **Lindberg et al. (2018)** | 건물 폴리곤 → 합성 DSM 생성 |
+| `19_solweig_utci.py` (예정) | **Lindberg et al. (2008, 2018)** | SOLWEIG 기반 링크별 UTCI |
+| 기상 입력 | Hersbach et al. (2020) | ERA5 데이터 |
+| 방법론 비교 | **Colaninno et al. (2024)** | 선행연구 벤치마크 |
 
 ---
 
@@ -55,3 +59,6 @@
 
 5. **UTCI 보정**
    > "SVF에 의한 UTCI 보정은 Lindberg & Grimmond(2011)의 연구를 근거로 완전 개활지 대비 최대 8°C 감소를 적용하였으며, 수목 캐노피에 의한 추가 보정은 Chen & Ng(2012)를 참조하여 완전 피복 시 2.5°C로 설정하였다."
+
+6. **합성 DSM 및 SOLWEIG (예정)**
+   > "UTCI는 SOLWEIG 모델(Lindberg et al., 2008)을 적용하여 산출하였다. LiDAR 기반 DSM 데이터를 확보하지 못한 관계로, Lindberg et al.(2018)의 UMEP 플랫폼에서 공식 지원하는 방법에 따라 건물 폴리곤 및 층수 속성(층수×3m)으로부터 합성 DSM을 생성하였다. 수목 캐노피 DSM(CDSM)은 미반영된 한계가 있으며, 이는 Colaninno et al.(2024)과의 주요 방법론적 차이점이다."
