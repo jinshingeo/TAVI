@@ -1,109 +1,97 @@
-# TAVI — Thermal Accessibility Vulnerability Index
-**열환경 기반 대중교통 역세권 보행 접근성 취약성 지수**
+# Thermal Catchment Area
+**열환경을 반영한 도보 접근성 공간 단위 제안 및 지하철 역세권 적용**
 
-> 석사 논문 연구 | 성동구 지하철역 폭염 시 도보 Catchment 분석
+> 석사 논문 연구 | 서울 성동구 | 업데이트: 2026-04-21
 
 ---
 
 ## 연구 개요
 
-### 연구 질문
-> 폭염 시간대에 열환경(UTCI)을 소프트 제약으로 적용했을 때,  
-> 지하철역까지의 30분 도보 Catchment는 얼마나 감소하는가?  
-> 그 감소 패턴은 어떤 공간 환경 요인으로 설명되는가?
+### 핵심 아이디어
 
-### 핵심 개념: TAVI
-**Thermal Accessibility Vulnerability Index** — 열환경이 대중교통 접근성에 가하는 취약성을 정량화한 지수
+기존 Catchment(역세권)는 **물리적 이동 거리**만 반영한다.  
+본 연구는 **UTCI 기반 열환경 임계값**을 적용하여 폭염 시 보행 불가 링크를 제거한  
+**Thermal Catchment Area**를 새로운 공간 접근성 단위로 제안한다.
 
 ```
-Classic Catchment:  역에서 30분 이내 도달 가능한 노드 집합 (순수 이동시간)
-Thermal Catchment:  effective_cost = base_time × (1 + α × penalty(UTCI)) ≤ 30분
-reduction_pct (%) = (Classic − Thermal) / Classic × 100   ← TAVI의 핵심 측정값
+Classic Catchment:  전체 네트워크 → Dijkstra → 시간예산 내 도달 노드셋
+Thermal Catchment:  UTCI ≥ 38°C 링크 제거 → 축소 네트워크 → Dijkstra → 도달 노드셋
+
+reduction_pct (%) = (Classic − Thermal) / Classic × 100
 ```
 
-### 핵심 기여
-- 기존 보행 접근성 연구: 물리적 네트워크 거리만 반영
-- 본 연구: 열환경(UTCI)을 링크별 소프트 제약으로 내재화 → **시간대별 접근성 감소** 실증
-- UTCI 국제 기준(ISO 7933)에 따른 패널티 체계로 재현 가능한 방법론 제시
+### 왜 하드 컷인가
+
+기존 연구들은 UTCI를 **소프트 패널티**로 반영한다 — 이동속도를 늦추거나 경로 선택 확률을 낮추는 방식.  
+이는 "더 오래 걸리지만 결국 도달 가능"하다는 전제를 깔고 있다.
+
+본 연구는 **UTCI 38°C (Bröde et al. 2012 — "very strong heat stress")** 를 이진 임계값으로 적용한다.
+
+> 이 기준 이상의 링크는 보행 자체가 중단된다는 보수적(conservative) 추정.  
+> 실제 접근성 손실은 본 연구 결과보다 더 클 수 있다.
 
 ---
 
-## 연구 지역
+## 케이스 스터디
 
-| 역 | 노선 | 13시 감소율 | 특성 |
-|----|------|------------|------|
-| **응봉역** | 경의중앙선 | **-63.9%** | 교량 노출, 그늘 부족 — 최고 취약 |
-| 서울숲역 | 수인분당선 | -51.2% | 공원 인접이나 노출 링크 많음 |
-| 옥수역 | 3호선/중앙선 | -50.7% | 한강변 경사 지형 |
-| 뚝섬역 | 2호선 | -49.3% | |
-| 행당역 | 5호선 | -41.2% | |
-| 성수역 | 2호선 | -38.2% | 서울숲 그늘 효과 |
-| **왕십리역** | 2호선 외 | **-29.2%** | 대형 환승역 — 최저 취약 |
+**서울 성동구 지하철역 7개** — Thermal Catchment 개념 검증용 사례
 
-> 같은 성동구 내에서도 응봉(63.9%) vs 왕십리(29.2%) — **2배 이상 격차**
+| 역 | 노선 | reduction_pct (13시) | 특성 |
+|----|------|---------------------|------|
+| **응봉역** | 경의중앙선 | **68.6%** | 교량 노출, 최고 취약 |
+| **서울숲역** | 수인분당선 | **67.8%** | 공원 인접에도 노출 링크 많음 |
+| 왕십리역 | 2·5호선 외 | 46.1% | 대형 환승역 |
+| 행당역 | 5호선 | 41.1% | — |
+| 옥수역 | 3호선·중앙선 | 29.8% | 한강 인접 |
+| 뚝섬역 | 2호선 | 35.6% | — |
+| **성수역** | 2호선 | **13.0%** | 하천·녹지 인접, 최저 취약 |
 
----
-
-## 선행연구와의 위치
-
-| 연구 | 접근성 분석 | 열환경 | 네트워크 |
-|------|------------|--------|---------|
-| Kar et al. (2023) *Annals of AAG* | STP/PPA | ❌ | ✅ |
-| Kar et al. (2024) *CEUS* | STP + 소프트 제약 | ❌ | ✅ |
-| Colaninno et al. (2024) *EPB* | 보행 노출 | ✅ UTCI | ❌ |
-| Basu et al. (2024) *Cities* | 보행 접근성 | ✅ UTCI | 부분 |
-| **본 연구 (TAVI)** | **Catchment** | **✅ UTCI** | **✅** |
+> 수치 출처: `catchment_solweig_summary.json` (SOLWEIG 기반 UTCI, 13시 기준)
 
 ---
 
-## 데이터
+## 선행연구 대비 위치
 
-| 데이터 | 출처 | 상태 |
-|--------|------|------|
-| 보행 네트워크 (성동구) | OpenStreetMap (osmnx) | ✅ 완료 |
-| S-DoT 환경정보 (2025.07.28~08.03) | 서울 열린데이터광장 | ✅ 완료 (57개 센서) |
-| ASOS 풍속·일사량 | 기상청 서울 108 | ✅ 완료 |
-| 건물 footprint | OSM | ✅ 완료 |
-| NDVI (Sentinel-2) | Google Earth Engine | ⏳ 수집 예정 |
-| 불투수면 비율 | 환경부 토지피복도 | ⏳ 수집 예정 |
-| 건물 높이 / SVF | 국토부 건물 DB | ⏳ 수집 예정 |
-| 인구 취약성 (Plan B) | KOSIS | ⏳ 선택 사항 |
+| 연구 | 열환경 지표 | 패널티 방식 | 분석 대상 | 새 공간 단위 |
+|------|-----------|------------|---------|------------|
+| Basu et al. (2024) *Cities* | UTCI | 소프트 (경로 확률) | 일반 보행권 | ❌ |
+| Aydin et al. (2026) *SCS* | UTCI (CFD) | 소프트 (PTT 증가) | POI 접근성 | ❌ |
+| Dong et al. (2024) *G&S* | LST (위성) | 없음 | UGS 접근성 | ❌ |
+| Wang et al. (2025) *UC* | LST 기반 DI | 없음 | UGS 접근성 | ❌ |
+| **본 연구** | **UTCI (SOLWEIG)** | **하드 컷 (이진)** | **지하철 역세권** | **✅** |
 
 ---
 
-## 분석 파이프라인
+## 방법론
+
+### UTCI 계산
 
 ```
-① S-DoT 실측 온습도 + ASOS 풍속·일사량
-   → UTCI 계산 (pythermalcomfort, v3_asos)
+기상 입력: Open-Meteo Archive API (2025-07-28~08-03, 7일 평균)
+           Tair, RH, 풍속, GHI (성동구 중심 위치)
 
-② IDW 보간 (p=2)
-   57개 센서 → 15,608개 링크 × 24시간 UTCI 매핑
+MRT 계산 (Lindberg et al. 2008 단순화):
+  주간: MRT = Tair + 0.5 × √(GHI × cos_z) × SVF
+  야간: MRT = Tair - 2.0 × SVF
 
-③ Thermal Catchment (역방향 Dijkstra)
-   effective_cost = base_time × (1 + α × penalty(UTCI))
-   cutoff = 30분 → Classic / Thermal node set 산출
+캐노피 보정: Chen & Ng (2012) — 수목 차폐 최대 -2.5°C
 
-④ reduction_pct 계산
-   7개 역 × 4시간대 (7·10·13·16시) → 히트맵
-
-⑤ Plan A: 공간환경 변수 추출 + 회귀분석
-   NDVI, 불투수면, 건물높이, 하천거리 → OLS/GWR
+UTCI: pythermalcomfort (Bröde et al. 2012 표준 다항식)
 ```
 
----
+SVF(Sky View Factor)가 링크 간 UTCI 공간 변이의 핵심 결정 변수.
 
-## 핵심 결과 (2026-04-10 기준)
+### 분석 파이프라인
 
-| 역 | 07시 | 10시 | 13시 | 16시 |
-|----|------|------|------|------|
-| 왕십리역 | -21.4% | -22.1% | -29.2% | -29.2% |
-| 행당역 | -30.5% | -31.0% | -41.2% | -41.2% |
-| 응봉역 | -54.5% | -56.0% | **-63.9%** | -63.7% |
-| 뚝섬역 | -38.5% | -39.3% | -49.3% | -49.3% |
-| 성수역 | -27.5% | -27.5% | -38.2% | -38.1% |
-| 서울숲역 | -39.8% | -40.1% | -51.2% | -51.1% |
-| 옥수역 | -41.8% | -41.8% | -50.7% | -50.7% |
+```
+01_네트워크/         OSM 보행 네트워크 구축 (성동구)
+      ↓
+04_분석결과/
+  15_svf_per_link.py        SVF + 캐노피 링크별 계산
+  19_solweig_utci.py        SOLWEIG 기반 링크별 UTCI 계산
+  20_catchment_solweig.py   7개 역 Thermal Catchment 계산
+  22_regression_analysis.py 역·링크 단위 회귀분석
+```
 
 ---
 
@@ -111,25 +99,23 @@ reduction_pct (%) = (Classic − Thermal) / Classic × 100   ← TAVI의 핵심 
 
 ```
 TAVI/
-├── 01_네트워크/
-│   ├── 01_download_network.py
-│   └── 02_check_bridges.py
-├── 02_기상데이터/
-│   ├── 01_sdot_utci.ipynb
-│   ├── 02_utci_link_interpolation.ipynb
-│   └── 03_utci_v3_asos.ipynb
-├── 03_건물데이터/
-│   └── 01_download_buildings.py
-├── 04_분석결과/
-│   ├── 02_utci_link_interpolation_v3.py
-│   ├── 11_thermal_catchment.py        # 2개 역 상세 분석
-│   ├── 12_catchment_all_stations.py   # 7개 역 전체 분석 (현재)
-│   ├── catchment_all_stations_table.csv
+├── 01_네트워크/            OSM 보행 네트워크
+├── 02_기상데이터/          기상 및 승하차 원시 데이터
+├── 03_건물데이터/          건물 형태, DEM
+├── 04_분석결과/            분석 스크립트 및 결과물
+│   ├── 15_svf_per_link.py
+│   ├── 19_solweig_utci.py
+│   ├── 20_catchment_solweig.py
+│   ├── 22_regression_analysis.py
+│   ├── 25_vulnerability_component.py   (후속 연구용 보존)
+│   ├── 26_tavi_index.py                (후속 연구용 보존)
+│   ├── 27_link_criticality.py          (후속 연구용 보존)
 │   └── figures/
 ├── 05_시각화/
 ├── docs/
-│   ├── 2026-04-10_tavi_research_report.md
-│   └── 2026-04-10_stp_to_tavi_evolution.md
+│   ├── 2026-04-21_research_direction_update.md   ← 현재 연구 방향
+│   ├── 2026-04-21_research_direction_update.docx
+│   └── 2026-04-16_TAVI_analysis_guide.ipynb
 ├── 선행연구/
 ├── CLAUDE.md
 ├── ROADMAP.ipynb
@@ -138,23 +124,15 @@ TAVI/
 
 ---
 
-## 실행 방법
+## 남은 작업
 
-```bash
-pip install osmnx networkx geopandas matplotlib numpy pyproj pythermalcomfort pandas contextily scipy
-
-# 1. UTCI v3 계산
-jupyter nbconvert --to notebook --execute 02_기상데이터/03_utci_v3_asos.ipynb
-
-# 2. IDW 링크 보간
-cd 04_분석결과 && python 02_utci_link_interpolation_v3.py
-
-# 3. Thermal Catchment (2개 역 상세)
-python 11_thermal_catchment.py
-
-# 4. 전체 역 Catchment 분석
-python 12_catchment_all_stations.py
-```
+| 우선순위 | 항목 | 상태 |
+|---------|------|------|
+| ★★★ | 일별 승하차 데이터 수집 (서울 열린데이터 OA-12914) | 미완 |
+| ★★★ | 폭염일 vs 비폭염일 승하차 검증 분석 | 미완 |
+| ★★ | Classic vs Thermal 2SFCA 비교 코드 | 미완 |
+| ★★ | 민감도 분석 (임계값 35/38/41°C, 시간예산 10/15/20분) | 미완 |
+| ★ | 영어 논문 초안 | 미완 |
 
 ---
 
@@ -162,12 +140,26 @@ python 12_catchment_all_stations.py
 
 | 버전 | 날짜 | 핵심 내용 |
 |------|------|----------|
-| STP_v3_asos | 2026-04-01 | ASOS 실측 UTCI 기반 PPA 분석 완성 (성동구_STP연구) |
-| TAVI_v1 | **2026-04-10** | 연구 방향 전환 — Catchment 기반 TAVI 프레임워크 수립, 7개 역 전체 분석 |
+| STP_v3 | 2026-04-01 | ASOS 기반 UTCI, 응봉동·성수동 PPA 비교 |
+| TAVI_v1 | 2026-04-10 | 연구 방향 전환 — Catchment 기반 분석 수립 |
+| TAVI_v2 | 2026-04-16 | SOLWEIG UTCI 통일, H×E×V 프레임 도입 |
+| **현재** | **2026-04-21** | **Thermal Catchment 개념 논문으로 확정, H×E×V 제거** |
 
 ---
 
-## 참고 문헌
-- Miller, H. J. (1991). Modelling accessibility using space-time prism concepts within GIS. *IJGIS*, 5(3), 287–301.
-- Kar, A., et al. (2024). Inclusive accessibility: Analyzing socio-economic disparities. *CEUS*, 114, 102202.
-- Colaninno, N., et al. (2024). Pedestrian thermal comfort and heat exposure. *EPB*.
+## 투고 목표
+
+- 1순위: **Landscape and Urban Planning** (SCI Q1)
+- 2순위: **Urban Climate** (SCI Q1)
+- 일정: 2026년 7월 중순
+
+---
+
+## 참고 문헌 (핵심)
+
+- Bröde et al. (2012). Deriving the operational procedure for the Universal Thermal Climate Index (UTCI). *IJB*, 56, 481–494.
+- Lindberg et al. (2008). SOLWEIG — Modelling spatial variations of 3D radiant fluxes. *IJB*, 52, 697–713.
+- Basu et al. (2024). Hot and bothered: Measuring the impact of heat on walkability. *Cities*, 155, 105468.
+- Aydin et al. (2026). UTCI-adjusted pedestrian accessibility. *Sustainable Cities and Society*.
+- Dong et al. (2024). Measuring urban thermal environment from accessibility-based perspective. *Geography and Sustainability*, 5, 329–342.
+- Wang et al. (2025). Supply and demand analysis of urban thermal environments. *Urban Climate*, 60, 102356.
